@@ -403,6 +403,29 @@ function generateGuid() {
     });
 }
 
+
+    function resetConversation() {
+
+    sessionId = generateGuid();
+
+    localStorage.setItem(
+        "chatSessionId",
+        sessionId
+    );
+
+    chatBox.innerHTML = "";
+
+    addMessage(
+        "Hello, Welcome to Interview Scheduling Assistant",
+        "bot"
+    );
+
+    console.log(
+        "New Session:",
+        sessionId
+    );
+}
+
 // Create a brand-new session every time the page loads.
 // Reuse session if available, otherwise create one
 let sessionId = localStorage.getItem("chatSessionId");
