@@ -404,11 +404,15 @@ function generateGuid() {
 }
 
 // Create a brand-new session every time the page loads.
-// This prevents old conversation history from causing repeated responses.
-const sessionId = generateGuid();
+// Reuse session if available, otherwise create one
+let sessionId = localStorage.getItem("chatSessionId");
 
-// Optional cleanup: remove any previously stored session ID
-localStorage.removeItem("chatSessionId");
+if (!sessionId) {
+    sessionId = generateGuid();
+    localStorage.setItem("chatSessionId", sessionId);
+}
+
+console.log("Current Session ID:", sessionId);
 
 const chatBox = document.getElementById("chatBox");
 const input = document.getElementById("userInput");
@@ -600,13 +604,13 @@ async function sendMessage() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-        userInput: message,
-        UserInputType: "",
-        sessionId: "",
-        isStreaming: true,
-        executionId: "",
-        connectionID: ""
-    })
+    userInput: message,
+    UserInputType: "",
+    sessionId: sessionId,
+    isStreaming: true,
+    executionId: "",
+    connectionID: ""
+})
 });
 
 if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -661,7 +665,18 @@ if (json.Type === 'status') {
 }
 
 if (json.Type === 'complete') {
+
     answer = json.Result || answer;
+
+    if (json.SessionId) {
+        sessionId = json.SessionId;
+        localStorage.setItem("chatSessionId", sessionId);
+
+        console.log(
+            "Session updated:",
+            sessionId
+        );
+    }
 }
 
         } catch (err) {
