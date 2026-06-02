@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>iSARA - iLink Smart Applicant Response Assistant</title>
+<link rel="icon" type="image/png" href="robot-avatar.png">
+<style>
+* { box-sizing: border-box; }
+
+:root {
+    --bg: linear-gradient(135deg, #0b0f14 0%, #111827 50%, #1f2937 100%);
+    --app-bg: rgba(17, 24, 39, 0.96);
+    --app-border: rgba(255,255,255,0.08);
+    --header-bg: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+    --header-border: rgba(255,255,255,0.08);
+    --title-color: #ffffff;
+    --subtitle-color: #9ca3af;
+    --chat-bg:
+        radial-gradient(circle at top right, rgba(229,57,53,0.06), transparent 30%),
+        radial-gradient(circle at bottom left, rgba(249,115,22,0.05), transparent 30%),
+        #0f172a;
+    --bot-bg: #1f2937;
+    --bot-text: #f9fafb;
+    --bot-border: rgba(255,255,255,0.06);
+    --input-container-bg: #111827;
+    --input-bg: #1f2937;
+    --input-border: rgba(255,255,255,0.08);
+    --input-text: #ffffff;
+    --placeholder: #9ca3af;
+    --footer-color: #6b7280;
+    --link-color: #60a5fa;
+    --shadow: 0 30px 80px rgba(0,0,0,0.45);
+}
+
+body.light-theme {
+    --bg: linear-gradient(135deg, #eef3ff 0%, #f8fafc 100%);
+    --app-bg: #ffffff;
+    --app-border: rgba(15,23,42,0.06);
+    --header-bg: linear-gradient(135deg, #ffffff 0%, #f7f9fc 100%);
+    --header-border: #e5e7eb;
+    --title-color: #111827;
+    --subtitle-color: #6b7280;
+    --chat-bg:
+        radial-gradient(circle at top right, rgba(229,57,53,0.03), transparent 30%),
+        radial-gradient(circle at bottom left, rgba(59,130,246,0.03), transparent 30%),
+        #f8fafc;
+    --bot-bg: #ffffff;
+    --bot-text: #111827;
+    --bot-border: #e5e7eb;
+    --input-container-bg: #ffffff;
+    --input-bg: #f9fafb;
+    --input-border: #d1d5db;
+    --input-text: #111827;
+    --placeholder: #9ca3af;
+    --footer-color: #9ca3af;
+    --link-color: #2563eb;
+    --shadow: 0 20px 60px rgba(15, 23, 42, 0.12);
+}
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    padding: 20px;
+    transition: background 0.3s ease;
+}
+
+.chat-app {
+    max-width: 980px;
+    height: calc(100vh - 40px);
+    margin: 0 auto;
+    background: var(--app-bg);
+    border: 1px solid var(--app-border);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(14px);
+    transition: all 0.3s ease;
+}
+
+.header {
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--header-border);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.logo {
+    height: 20px;
+    width: auto;
+    flex-shrink: 0;
+}
+
+.bot-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    box-shadow: 0 8px 20px rgba(229,57,53,0.25);
+}
+
+.header-info h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--title-color);
+}
+
+.header-info p {
+    margin: 4px 0 0;
+    font-size: 14px;
+    color: var(--subtitle-color);
+}
+
+.status {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #10b981;
+    font-weight: 600;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 0 4px rgba(16,185,129,0.12);
+}
+
+.theme-toggle {
+    margin-left: 16px;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--input-text);
+    border-radius: 999px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.chat-box {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    background: var(--chat-bg);
+}
+
+.message-row {
+    display: flex;
+    margin-bottom: 16px;
+    animation: fadeInUp 0.25s ease;
+}
+
+.message-row.user { justify-content: flex-end; }
+.message-row.bot { justify-content: flex-start; }
+
+.message {
+    max-width: 78%;
+    padding: 12px 16px;
+    border-radius: 18px;
+    line-height: 1.55;
+    font-size: 15px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    box-shadow: 0 4px 14px rgba(15,23,42,0.15);
+}
+
+.message.user {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: white;
+    border-bottom-right-radius: 6px;
+}
+
+.message.bot {
+    background: var(--bot-bg);
+    color: var(--bot-text);
+    border: 1px solid var(--bot-border);
+    border-bottom-left-radius: 6px;
+}
+
+.typing-message {
+    display: inline-flex;
+    align-items: center;
+
+    width: fit-content !important;
+    max-width: fit-content !important;
+
+    padding: 6px 10px !important;
+
+    border-radius: 12px !important;
+
+    font-size: 14px;
+}
+
+.message a {
+    color: var(--link-color);
+    text-decoration: underline;
+    word-break: break-all;
+}
+
+.timestamp {
+    font-size: 11px;
+    margin-top: 6px;
+    opacity: 0.75;
+    text-align: right;
+}
+
+.typing {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.typing span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #9ca3af;
+    animation: bounce 1.2s infinite;
+}
+
+.typing span:nth-child(2) { animation-delay: 0.2s; }
+.typing span:nth-child(3) { animation-delay: 0.4s; }
+
+.input-container {
+    padding: 18px 20px;
+    background: var(--input-container-bg);
+    border-top: 1px solid var(--header-border);
+}
+
+.input-wrapper {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 20px;
+    padding: 10px;
+}
+
+#userInput {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--input-text);
+    font-size: 15px;
+    font-family: inherit;
+    resize: none;
+    min-height: 24px;
+    max-height: 120px;
+    line-height: 1.5;
+    padding: 8px 10px;
+}
+
+#userInput::placeholder {
+    color: var(--placeholder);
+}
+
+.send-btn {
+    width: 48px;
+    height: 48px;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e53935, #f97316);
+    color: white;
+    cursor: pointer;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 24px rgba(229,57,53,0.25);
+}
+
+.footer-note {
+    text-align: center;
+    font-size: 12px;
+    color: var(--footer-color);
+    margin-top: 10px;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bounce {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
+    .status-pulse {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #10b981;
+    display: inline-block;
+    animation: pulse 1.2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.4;
+    }
+
+    50% {
+        transform: scale(1.3);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(0.8);
+        opacity: 0.4;
+    }
+}
+
+@media (max-width: 768px) {
+    body { padding: 0; }
+    .chat-app {
+        height: 100vh;
+        border-radius: 0;
+        max-width: 100%;
+    }
+    .status { display: none; }
+    .theme-toggle { padding: 6px 10px; font-size: 12px; }
+    .logo { height: 22px; }
+    .header-info h1 { font-size: 18px; }
+    .header-info p { font-size: 12px; }
+    .message { max-width: 88%; font-size: 14px; }
+}
+</style>
+</head>
+<body>
+<div class="chat-app">
+    <div class="header">
+        <img class="logo" src="logo.png" alt="iLink Digital Logo">
+        <img src="robot-avatar.png" alt="iSARA Bot" class="bot-avatar">
+
+        <div class="header-info">
+            <h1>iSARA</h1>
+            <p>iLink Smart Applicant Response Assistant</p>
+        </div>
+
+        <div class="status">
+            <span class="status-dot"></span>
+            Online
+        </div>
+
+        <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">
+            ☀️ Light Mode
+        </button>
+    </div>
+
+    <div id="chatBox" class="chat-box"></div>
+
+    <div class="input-container">
+        <div class="input-wrapper">
+            <textarea id="userInput" rows="1" placeholder="Type your question here..."></textarea>
+            <button id="sendBtn" class="send-btn" onclick="sendMessage()">➤</button>
+        </div>
+        <div class="footer-note">
+            Powered by iLink Digital AI • Available 24/7 for candidate queries
+        </div>
+    </div>
+</div>
+
+<script>
+const API_URL = "https://hr-faq-proxy.gmalhotra51.workers.dev";
+
+// Theme management
+function applyTheme(theme) {
+    document.body.classList.toggle('light-theme', theme === 'light');
+    document.getElementById('themeToggle').textContent =
+        theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode';
+    localStorage.setItem('chatTheme', theme);
+}
+
+function toggleTheme() {
+    const current = localStorage.getItem('chatTheme') || 'dark';
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+// Default to dark mode
+applyTheme(localStorage.getItem('chatTheme') || 'dark');
+
+function generateGuid() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
+// Create a brand-new session every time the page loads.
+// This prevents old conversation history from causing repeated responses.
+const sessionId = generateGuid();
+
+// Optional cleanup: remove any previously stored session ID
+localStorage.removeItem("chatSessionId");
+
+const chatBox = document.getElementById("chatBox");
+const input = document.getElementById("userInput");
+const sendBtn = document.getElementById("sendBtn");
+
+function getTime() {
+    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function linkify(text) {
+    if (!text) return "";
+
+    // -------------------------------------------------
+    // STEP 1: Fix URLs that contain spaces
+    // -------------------------------------------------
+    text = text.replace(
+        /https?:\/\/(?:\s*[A-Za-z0-9-]+\s*\.\s*)+[A-Za-z0-9-]+(?:\/[^\s]*)?/gi,
+        function(match) {
+            return match.replace(/\s+/g, '');
+        }
+    );
+
+    // -------------------------------------------------
+    // STEP 2: Escape HTML for security
+    // -------------------------------------------------
+    const div = document.createElement('div');
+    div.textContent = text;
+    let html = div.innerHTML;
+
+    // -------------------------------------------------
+    // STEP 3: Markdown formatting
+    // -------------------------------------------------
+
+    // Bold: **text**
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+    // Italic: *text*
+    html = html.replace(/(^|[^*])\*(?!\*)(.*?)\*(?!\*)/g, '$1<em>$2</em>');
+
+    // Inline code: `text`
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+    // -------------------------------------------------
+    // STEP 4: Convert URLs to clickable links
+    // -------------------------------------------------
+    html = html.replace(
+        /(https?:\/\/[^\s<]+)/gi,
+        '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+    );
+
+    // -------------------------------------------------
+    // STEP 5: Preserve line breaks
+    // -------------------------------------------------
+    html = html.replace(/\n/g, '<br>');
+
+    return html;
+}
+
+function addMessage(text, sender) {
+    const row = document.createElement('div');
+    row.className = `message-row ${sender}`;
+
+    const bubble = document.createElement('div');
+    bubble.className = `message ${sender}`;
+    bubble.innerHTML = `${linkify(text)}<div class="timestamp">${getTime()}</div>`;
+
+    row.appendChild(bubble);
+    chatBox.appendChild(row);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+async function typeMessage(text, sender) {
+    const row = document.createElement('div');
+    row.className = `message-row ${sender}`;
+
+    const bubble = document.createElement('div');
+    bubble.className = `message ${sender}`;
+
+    const content = document.createElement('div');
+
+    const timestamp = document.createElement('div');
+    timestamp.className = 'timestamp';
+    timestamp.textContent = getTime();
+
+    bubble.appendChild(content);
+    bubble.appendChild(timestamp);
+    row.appendChild(bubble);
+
+    chatBox.appendChild(row);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // Split into words instead of characters
+    const words = text.split(/\s+/);
+    let currentText = '';
+
+    for (let i = 0; i < words.length; i++) {
+        currentText += (i === 0 ? '' : ' ') + words[i];
+
+        // Apply formatting to partial text
+        content.innerHTML = linkify(currentText);
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        // Typing speed in milliseconds
+        await new Promise(resolve => setTimeout(resolve, 35));
+    }
+
+    // Final render to ensure complete formatting
+    content.innerHTML = linkify(text);
+}
+   
+
+function showTyping(text = "🤔 Thinking...") {
+
+    const row = document.createElement('div');
+    row.className = 'message-row bot';
+    row.id = 'typingRow';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'message bot typing-message';
+    bubble.id = 'typingBubble';
+
+    bubble.innerHTML = text;
+
+    row.appendChild(bubble);
+    chatBox.appendChild(row);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+let typingAnimation;
+
+function updateTyping(text) {
+
+    const bubble = document.getElementById('typingBubble');
+
+    if (!bubble) return;
+
+    clearInterval(typingAnimation);
+
+    let dots = 0;
+
+    typingAnimation = setInterval(() => {
+
+        dots = (dots + 1) % 4;
+
+        bubble.innerHTML = `
+            <span style="display:flex;align-items:center;gap:8px;">
+                <span class="status-pulse"></span>
+                ${text}${'.'.repeat(dots)}
+            </span>
+        `;
+
+    }, 500);
+}
+    
+function hideTyping() {
+
+    clearInterval(typingAnimation);
+
+    const row = document.getElementById('typingRow');
+
+    if (row) row.remove();
+}
+
+function autoResize() {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+}
+
+async function sendMessage() {
+    const message = input.value.trim();
+    if (!message) return;
+
+    addMessage(message, 'user');
+    input.value = '';
+    autoResize();
+    sendBtn.disabled = true;
+    showTyping();
+    updateTyping('🤔 Thinking');
+
+    try {
+        const response = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        userInput: message,
+        UserInputType: "",
+        sessionId: "",
+        isStreaming: true,
+        executionId: "",
+        connectionID: ""
+    })
+});
+
+if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+const reader = response.body.getReader();
+const decoder = new TextDecoder();
+
+let answer = 'No response received.';
+let buffer = '';
+
+while (true) {
+
+    const { done, value } = await reader.read();
+
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+
+    const events = buffer.split('\n\n');
+
+    buffer = events.pop();
+
+    for (const event of events) {
+
+        const line = event.trim();
+
+        if (!line.startsWith('data:')) continue;
+
+        try {
+
+            const json = JSON.parse(
+                line.replace('data:', '').trim()
+            );
+
+console.log('SSE Event:', json);
+
+if (json.Type === 'status') {
+
+    const status = (json.Status || '').toLowerCase();
+
+    if (status.includes('thinking')) {
+        updateTyping('🤔 Thinking');
+    }
+
+    else if (status.includes('drafting')) {
+        updateTyping('📝 Drafting answer');
+    }
+
+    else {
+        updateTyping('⚡ Working');
+    }
+}
+
+if (json.Type === 'complete') {
+    answer = json.Result || answer;
+}
+
+        } catch (err) {
+            console.log('Parse Error:', err);
+        }
+    }
+}
+
+hideTyping();
+await typeMessage(answer, 'bot');
+    } catch (error) {
+        hideTyping();
+        addMessage(
+            'Sorry, I am temporarily unable to respond. Please try again in a moment.',
+            'bot'
+        );
+        console.error('API Error:', error);
+    } finally {
+        sendBtn.disabled = false;
+        input.focus();
+    }
+}
+
+input.addEventListener('input', autoResize);
+
+input.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+    }
+});
+
+window.addEventListener('load', function() {
+    setTimeout(() => {
+        addMessage(
+            'Hello, I am Availability Agent.',
+            'bot'
+        );
+        input.focus();
+    }, 400);
+});
+
+// Disable right-click
+document.addEventListener('contextmenu', function (e) {
+    e.preventDefault();
+});
+
+// Disable Developer Tools shortcuts
+document.addEventListener('keydown', function (e) {
+    const key = e.key.toUpperCase();
+
+    const blocked =
+        e.key === 'F12' ||
+        (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(key)) ||
+        (e.ctrlKey && key === 'U');
+
+    if (blocked) {
+        e.preventDefault();
+        return false;
+    }
+});   
+</script>
+</body>
+</html>
