@@ -371,7 +371,7 @@ body {
             <button id="sendBtn" class="send-btn" onclick="sendMessage()">➤</button>
         </div>
         <div class="footer-note">
-            Powered by iLink Digital AI • Available 24/7 for candidate queries
+            Powered by iLink Digital AI • Available 24/7 for Interviews Scheduling
         </div>
     </div>
 </div>
@@ -404,6 +404,21 @@ function generateGuid() {
 }
 
 
+// Create a brand-new session every time the page loads.
+// Reuse session if available, otherwise create one
+let sessionId = localStorage.getItem("chatSessionId");
+
+if (!sessionId) {
+    sessionId = generateGuid();
+    localStorage.setItem("chatSessionId", sessionId);
+}
+
+console.log("Current Session ID:", sessionId);
+
+const chatBox = document.getElementById("chatBox");
+const input = document.getElementById("userInput");
+const sendBtn = document.getElementById("sendBtn");
+
     function resetConversation() {
 
     sessionId = generateGuid();
@@ -425,21 +440,7 @@ function generateGuid() {
         sessionId
     );
 }
-
-// Create a brand-new session every time the page loads.
-// Reuse session if available, otherwise create one
-let sessionId = localStorage.getItem("chatSessionId");
-
-if (!sessionId) {
-    sessionId = generateGuid();
-    localStorage.setItem("chatSessionId", sessionId);
-}
-
-console.log("Current Session ID:", sessionId);
-
-const chatBox = document.getElementById("chatBox");
-const input = document.getElementById("userInput");
-const sendBtn = document.getElementById("sendBtn");
+    
 
 function getTime() {
     return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
